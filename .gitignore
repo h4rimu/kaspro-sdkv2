@@ -1,0 +1,15 @@
+
+\.idea/
+
+sbux-online-order
+
+*.iml
+
+glide\.yaml
+
+glide\.lock
+
+\vendor/
+
+go.mod
+go.sum
