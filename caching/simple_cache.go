@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+var GlobalCache *cache.Cache
+
 type SimpleCache struct {
 	ExpiredTime int
 	PurgeTime   int
