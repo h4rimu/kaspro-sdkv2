@@ -12,7 +12,6 @@ import (
 var log = logging.MustGetLogger("kaspro-sdkv2")
 
 type ThirdParty interface {
-	SetApiUrl() (*url.URL, *error)
 	HitClient(url url.URL) (*ClientResponse, *error)
 }
 
