@@ -52,20 +52,20 @@ func (c *ClientParty) HitClient() (*ClientResponse, *error) {
 	}
 
 	if c.Debug {
-		log.Infof(c.UniqueID, "===================================================== HIT "+strings.ToUpper(c.ClientName)+" API =======================================================")
-		log.Infof(c.UniqueID, "HTTP METHOD %s ", request.Method)
-		log.Infof(c.UniqueID, "URL %s ", request.URL)
-		log.Infof(c.UniqueID, "HEADER %s ", request.Header)
+		log.Debugf(c.UniqueID, "===================================================== HIT "+strings.ToUpper(c.ClientName)+" API =======================================================")
+		log.Debugf(c.UniqueID, "HTTP METHOD %s ", request.Method)
+		log.Debugf(c.UniqueID, "URL %s ", request.URL)
+		log.Debugf(c.UniqueID, "HEADER %s ", request.Header)
 		if request.Body != nil {
-			log.Infof(c.UniqueID, "BODY %s ", request.Body)
+			log.Debugf(c.UniqueID, "BODY %s ", request.Body)
 		}
-		log.Infof(c.UniqueID, "==========================================================================================================================")
+		log.Debugf(c.UniqueID, "==========================================================================================================================")
 	}
 
 	if c.Retry > 1 {
 		for i := 0; i < c.Retry; i++ {
 
-			log.Infof(c.UniqueID, "Retry Hit To Client ", i)
+			log.Debugf(c.UniqueID, "Retry Hit To Client ", i)
 			response, err := c.HttpClient.Do(request)
 
 			if err != nil {
@@ -119,8 +119,8 @@ func (c *ClientParty) HitClient() (*ClientResponse, *error) {
 
 func printClientResponse(debug bool, uniqueID string, clientName string, strResult string) {
 	if debug {
-		log.Infof(uniqueID, "================================================ RESPONSE "+strings.ToUpper(clientName)+" API ================================================")
-		log.Infof(uniqueID, "GET RESPONSE FROM "+strings.ToUpper(clientName)+" API %s", strResult)
-		log.Infof(uniqueID, "======================================================================================================================")
+		log.Debugf(uniqueID, "================================================ RESPONSE "+strings.ToUpper(clientName)+" API ================================================")
+		log.Debugf(uniqueID, "GET RESPONSE FROM "+strings.ToUpper(clientName)+" API %s", strResult)
+		log.Debugf(uniqueID, "======================================================================================================================")
 	}
 }

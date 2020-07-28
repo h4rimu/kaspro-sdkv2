@@ -1,8 +1,8 @@
 package logging
 
 import (
-	"github.com/h4rimu/kaspro-sdkv2/app/types"
 	"encoding/json"
+	"github.com/h4rimu/kaspro-sdkv2/app/types"
 	"io/ioutil"
 )
 
@@ -36,7 +36,7 @@ func InitializeMaps(fileName string, localize string) *types.MessageMap {
 		mapName = M_ERROR_CODES_ID
 	}
 
-	log.Info(INTERNAL, "found map data file map_data.json")
+	log.Debugf(INTERNAL, "found map data file map_data.json")
 	doc := MapsDocument{}
 	if err := json.Unmarshal(bytes, &doc); err != nil {
 	}
@@ -48,7 +48,7 @@ func InitializeMaps(fileName string, localize string) *types.MessageMap {
 			messageMap.Entries = elem.Entries
 		}
 	}
-	log.Info(INTERNAL, "parsed map data file map_data.json")
+	log.Debugf(INTERNAL, "parsed map data file map_data.json")
 
 	return &messageMap
 }
