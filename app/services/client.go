@@ -30,7 +30,7 @@ type ClientParty struct {
 	HttpClient  http.Client
 	Headers     []map[string]string
 	RequestBody io.Reader
-	ClientRetry ClientRetry
+	ClientRetry *ClientRetry
 }
 
 type ClientRetry struct {
@@ -76,49 +76,6 @@ func (c *ClientParty) HitClient() (*ClientResponse, *error) {
 		log.Debugf(c.UniqueID, "==========================================================================================================================")
 	}
 
-	/*if c.Retry > 1 {
-		for i := 0; i < c.Retry; i++ {
-
-			log.Debugf(c.UniqueID, "Retry Hit To Client ", i)
-			response, err := c.HttpClient.Do(request)
-			if err != nil {
-				log.Errorf(c.UniqueID, "Error occurred %s ", err.Error())
-				return nil, &err
-			}
-
-			if c.HttpToRetry != nil {
-				for key, value := range *c.HttpToRetry {
-					if key == response.StatusCode {
-						log.Warning(c.UniqueID, "Retry occurred with http response ", value)
-						break
-					}
-				}
-			}
-
-			if response.StatusCode != http.StatusRequestTimeout || response.StatusCode != http.StatusGatewayTimeout {
-
-				byteResult, err := ioutil.ReadAll(response.Body)
-				if err != nil {
-					log.Errorf(c.UniqueID, "Error occurred %s ", err.Error())
-					return nil, &err
-				}
-				printClientResponse(c.Debug, c.UniqueID, c.ClientName, string(byteResult))
-				clientResponse := ClientResponse{
-					HttpCode:     response.StatusCode,
-					ByteResponse: byteResult,
-				}
-				return &clientResponse, nil
-			}
-
-			byteResult, err := ioutil.ReadAll(response.Body)
-			if err != nil {
-				log.Errorf(c.UniqueID, "Error occurred %s ", err.Error())
-				return nil, &err
-			}
-			printClientResponse(c.Debug, c.UniqueID, c.ClientName, string(byteResult))
-		}
-	}*/
-
 	response, err := c.HttpClient.Do(request)
 	if err != nil {
 		log.Errorf(c.UniqueID, "Error occurred %s ", err.Error())
@@ -132,7 +89,7 @@ func (c *ClientParty) HitClient() (*ClientResponse, *error) {
 	}
 	printClientResponse(c.Debug, c.UniqueID, c.ClientName, string(byteResult))
 
-	if c.ClientRetry.HttpToRetry != nil && c.ClientRetry.MaxRetry > 1 {
+	if c.ClientRetry != nil {
 		clientResponse, err := httpRetry(c, request, response.StatusCode)
 		if err != nil {
 			return nil, err
