@@ -7,9 +7,15 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 var log = logging.MustGetLogger("kaspro-sdkv2")
+
+const (
+	INTERVAL_MINUTE = "MINUTE"
+	INTERVAL_SECOND = "SECOND"
+)
 
 type ThirdParty interface {
 	HitClient(url url.URL) (*ClientResponse, *error)
@@ -20,11 +26,19 @@ type ClientParty struct {
 	ClientName  string
 	HttpMethod  string
 	Debug       bool
-	Retry       int
 	UrlApi      url.URL
 	HttpClient  http.Client
 	Headers     []map[string]string
 	RequestBody io.Reader
+	ClientRetry ClientRetry
+}
+
+type ClientRetry struct {
+	MaxRetry      int
+	HttpToRetry   *[]map[int]string
+	Interval      string
+	BeginInterval int
+	EndInterval   int
 }
 
 type ClientResponse struct {
@@ -62,18 +76,27 @@ func (c *ClientParty) HitClient() (*ClientResponse, *error) {
 		log.Debugf(c.UniqueID, "==========================================================================================================================")
 	}
 
-	if c.Retry > 1 {
+	/*if c.Retry > 1 {
 		for i := 0; i < c.Retry; i++ {
 
 			log.Debugf(c.UniqueID, "Retry Hit To Client ", i)
 			response, err := c.HttpClient.Do(request)
-
 			if err != nil {
 				log.Errorf(c.UniqueID, "Error occurred %s ", err.Error())
 				return nil, &err
 			}
 
+			if c.HttpToRetry != nil {
+				for key, value := range *c.HttpToRetry {
+					if key == response.StatusCode {
+						log.Warning(c.UniqueID, "Retry occurred with http response ", value)
+						break
+					}
+				}
+			}
+
 			if response.StatusCode != http.StatusRequestTimeout || response.StatusCode != http.StatusGatewayTimeout {
+
 				byteResult, err := ioutil.ReadAll(response.Body)
 				if err != nil {
 					log.Errorf(c.UniqueID, "Error occurred %s ", err.Error())
@@ -94,7 +117,7 @@ func (c *ClientParty) HitClient() (*ClientResponse, *error) {
 			}
 			printClientResponse(c.Debug, c.UniqueID, c.ClientName, string(byteResult))
 		}
-	}
+	}*/
 
 	response, err := c.HttpClient.Do(request)
 	if err != nil {
@@ -107,6 +130,79 @@ func (c *ClientParty) HitClient() (*ClientResponse, *error) {
 		log.Errorf(c.UniqueID, "Error occurred %s ", err.Error())
 		return nil, &err
 	}
+	printClientResponse(c.Debug, c.UniqueID, c.ClientName, string(byteResult))
+
+	if c.ClientRetry.HttpToRetry != nil && c.ClientRetry.MaxRetry > 1 {
+		clientResponse, err := httpRetry(c, request, response.StatusCode)
+		if err != nil {
+			return nil, err
+		}
+		if clientResponse != nil {
+			return clientResponse, nil
+		}
+	}
+
+	clientResponse := ClientResponse{
+		HttpCode:     response.StatusCode,
+		ByteResponse: byteResult,
+	}
+	return &clientResponse, nil
+}
+
+func httpRetry(c *ClientParty, request *http.Request, statusCode int) (*ClientResponse, *error) {
+
+	var response *http.Response
+	var errResponse error
+	var byteResult []byte
+	var byteError error
+
+	interval := time.Duration(c.ClientRetry.BeginInterval)
+	for i := 0; i < c.ClientRetry.MaxRetry; i++ {
+		for _, element := range *c.ClientRetry.HttpToRetry {
+			for key, value := range element {
+
+				if key == statusCode {
+					log.Warning(c.UniqueID, "Retry occurred when http code and message, retry for ", key, value, i+1)
+					response, errResponse = c.HttpClient.Do(request)
+					if errResponse != nil {
+						log.Errorf(c.UniqueID, "Error occurred %s ", errResponse.Error())
+						return nil, &errResponse
+					}
+
+					byteResult, byteError = ioutil.ReadAll(response.Body)
+					if byteError != nil {
+						log.Errorf(c.UniqueID, "Error occurred %s ", byteError.Error())
+						return nil, &byteError
+					}
+
+					log.Warning(c.UniqueID, "Interval - ", interval)
+					printClientResponse(c.Debug, c.UniqueID, c.ClientName, string(byteResult))
+					if c.ClientRetry.Interval == INTERVAL_MINUTE {
+						time.Sleep(interval * time.Minute)
+					} else {
+						time.Sleep(interval * time.Second)
+					}
+					interval *= time.Duration(c.ClientRetry.EndInterval)
+
+				}
+
+			}
+		}
+
+	}
+
+	log.Warning(c.UniqueID, "Retry finished ")
+	response, errResponse = c.HttpClient.Do(request)
+	if errResponse != nil {
+		log.Errorf(c.UniqueID, "Error occurred %s ", errResponse.Error())
+		return nil, &errResponse
+	}
+
+	byteResult, byteError = ioutil.ReadAll(response.Body)
+	if byteError != nil {
+		log.Errorf(c.UniqueID, "Error occurred %s ", byteError.Error())
+		return nil, &byteError
+	}
 
 	printClientResponse(c.Debug, c.UniqueID, c.ClientName, string(byteResult))
 
@@ -114,6 +210,7 @@ func (c *ClientParty) HitClient() (*ClientResponse, *error) {
 		HttpCode:     response.StatusCode,
 		ByteResponse: byteResult,
 	}
+
 	return &clientResponse, nil
 }
 
