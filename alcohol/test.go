@@ -12,8 +12,7 @@ import (
 var log = opLogging.MustGetLogger("kaspro-sdkv2")
 
 func main() {
-	loggingTesting()
-	simpleCacheTesting()
+
 	testClientRetry()
 }
 
@@ -53,7 +52,7 @@ func testClientRetry() {
 		ClientName:  "KASPRO",
 		HttpMethod:  http.MethodGet,
 		Debug:       true,
-		ClientRetry: clientRetry,
+		ClientRetry: &clientRetry,
 		UrlApi:      *urlApi,
 		HttpClient:  http.Client{},
 		Headers:     *SetKasproHeaderContent(),
@@ -65,7 +64,7 @@ func testClientRetry() {
 		fmt.Println("ERROR ", *err)
 	}
 
-	fmt.Println("HTTP CODE ", response)
+	fmt.Println("HTTP CODE ", string(response.ByteResponse))
 }
 
 func SetKasproHeaderContent() *[]map[string]string {
@@ -89,7 +88,7 @@ func SetHttpToRetry() *[]map[int]string {
 
 	var retries []map[int]string
 	httpCode200 := make(map[int]string)
-	httpCode200[200] = "OK"
+	httpCode200[http.StatusBadRequest] = "Bad Request"
 	retries = append(retries, httpCode200)
 
 	return &retries
