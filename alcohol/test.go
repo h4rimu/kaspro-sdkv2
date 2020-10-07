@@ -43,8 +43,8 @@ func testClientRetry() {
 	clientRetry := services.ClientRetry{
 		MaxRetry:      10,
 		HttpToRetry:   SetHttpToRetry(),
-		BeginInterval: 1,
-		EndInterval:   1,
+		BeginInterval: 5,
+		EndInterval:   5,
 	}
 
 	services := services.ClientParty{
