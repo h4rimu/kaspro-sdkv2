@@ -19,6 +19,7 @@ type CacheFunction interface {
 	GetValue(key string, cache cache.Cache) *interface{}
 	SetValueWithHash(key string, value string, cache cache.Cache)
 	GetValueWithHash(key string, cache cache.Cache) *interface{}
+	DeleteCache(key string, globalCache cache.Cache)
 }
 
 func (c *SimpleCache) CreateNewCache() *cache.Cache {
@@ -61,5 +62,11 @@ func (c *SimpleCache) GetValueWithHash(key string, globalCache cache.Cache) *int
 	}
 
 	return nil
+
+}
+
+func (c *SimpleCache) DeleteCache(key string, globalCache cache.Cache) {
+
+	globalCache.Delete(key)
 
 }
