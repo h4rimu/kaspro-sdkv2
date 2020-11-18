@@ -17,9 +17,11 @@ type CacheFunction interface {
 	CreateNewCache() *cache.Cache
 	SetValue(key string, value string, cache cache.Cache)
 	GetValue(key string, cache cache.Cache) *interface{}
+	DeleteCache(key string, globalCache cache.Cache)
 	SetValueWithHash(key string, value string, cache cache.Cache)
 	GetValueWithHash(key string, cache cache.Cache) *interface{}
-	DeleteCache(key string, globalCache cache.Cache)
+	DeleteCacheWithHash(key string, globalCache cache.Cache)
+
 }
 
 func (c *SimpleCache) CreateNewCache() *cache.Cache {
@@ -47,6 +49,12 @@ func (c *SimpleCache) GetValue(key string, globalCache cache.Cache) *interface{}
 
 }
 
+func (c *SimpleCache) DeleteCache(key string, globalCache cache.Cache) {
+
+	globalCache.Delete(key)
+
+}
+
 func (c *SimpleCache) SetValueWithHash(key string, value string, globalCache cache.Cache) {
 
 	globalCache.Set(utils.EncryptionSha256(key), utils.EncryptionSha256(value),
@@ -65,8 +73,8 @@ func (c *SimpleCache) GetValueWithHash(key string, globalCache cache.Cache) *int
 
 }
 
-func (c *SimpleCache) DeleteCache(key string, globalCache cache.Cache) {
+func (c *SimpleCache) DeleteCacheWithHash(key string, globalCache cache.Cache) {
 
-	globalCache.Delete(key)
+	globalCache.Delete(utils.EncryptionSha256(key))
 
 }
